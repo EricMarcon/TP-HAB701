@@ -1,0 +1,236 @@
+---
+title: "TP Ecologie Biodiversité Montmaur"
+author: "Eric Marcon d'après Bastien Mérigot et Guillaume Papuga"
+date: "`r Sys.Date()`"
+bibliography: references.bib
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+# Installation of packages if necessary
+InstallPackages <- function(Packages) {
+  InstallPackage <- function(Package) {
+    if (!Package %in% installed.packages()[, 1]) {
+      install.packages(Package, repos="https://cran.rstudio.com/")
+    }
+  }
+  invisible(sapply(Packages, InstallPackage))
+}
+# Basic packages
+InstallPackages(c("bookdown", "formatR", "tidyverse"))
+# Specific packages
+InstallPackages(
+  c(
+    "ade4", 
+    "vegan"
+  )
+)
+# knitr options
+knitr::opts_chunk$set(echo = TRUE, cache = FALSE, message = FALSE, warning = FALSE)
+# Load the tidyverse
+library("tidyverse")
+```
+
+# Data
+
+## Base R version 
+
+Load the data:
+
+```{r}
+montmaur <- read.csv2("data/species.csv")
+```
+
+Interactive version:
+
+```{r, eval=FALSE}
+montmaur <- read.table(file.choose(), sep=";", dec=",", header=T)
+# Edit the data
+montmaur <- edit(montmaur) 
+```
+
+Editing the data interactively is a bad practice because it is not reproducible.
+Do rather edit the original file.
+
+Explore the data:
+```{r}
+head(montmaur)
+str(montmaur)
+summary(montmaur)
+```
+
+Map the plots:
+
+```{r}
+# Force the aspect ratio
+plot(x = montmaur$longitude, y = montmaur$longitude, asp = 1)
+```
+Avoid repeating `montmaur$`:
+
+- With `attach()`: bad practice.
+See `?attach`.
+```{r}
+attach(montmaur)
+plot(x = longitude, y = longitude, asp = 1)
+# Don't forget to detach after use!
+detach(montmaur)
+```
+
+- With `with()`.
+```{r}
+with(montmaur,
+  # Indent the code
+  plot(x = longitude, y = longitude, asp = 1)
+  # Close the bracket
+)
+```
+
+
+Are some plots empty?
+```{r}
+# The first 10 columns contain plot data, the others, the species abundances
+min(rowSums(montmaur[, -(1:10)]))
+```
+Are some species missing?
+```{r}
+# The first 10 columns contain plot data, the others, the species abundances
+which(colSums(montmaur[, -(1:10)]) == 0)
+# Numbers are those of the columns. They are named.
+```
+Create a dataframe with species abundances only, and eliminate absent species
+
+```{r}
+montmaur_sp <- montmaur[, -(1:10)][, -which(colSums(montmaur[, -(1:10)]) == 0)]
+# Add the plot names
+rownames(montmaur_sp) <- montmaur$code_rel
+```
+
+Make dataframes for the north and south face only:
+```{r}
+montmaur_sp_n <- montmaur_sp[montmaur$versant == "N", ]
+montmaur_sp_s <- montmaur_sp[montmaur$versant == "S", ]
+```
+
+Graphical representation of the data table:
+
+```{r}
+library("ade4")
+table.value(montmaur_sp_n, clegend=0) 
+```
+
+## Tidyverse
+
+Read the data.
+
+```{r}
+library("tidyverse")
+montmaur <- read_csv2("data/species.csv")
+```
+
+Make a pipeline to select rows and columns:
+
+```{r}
+montmaur %>%
+  # Filter the north face
+  filter(versant == "N") %>% 
+  # Select species columns
+  select(!(Groupe:rec_tot)) %>% 
+  # Eliminate absent species
+  select(where(~sum(.) != 0))
+```
+
+
+# Accumulation curves
+
+## Assess diversity at a sampling level
+
+```{r}
+library("vegan")
+sac <- specaccum(montmaur_sp)
+plot(sac)
+sac_n <- specaccum(montmaur_sp_n) 
+sac_s <- specaccum(montmaur_sp_s)
+```
+
+The number of species is in the `$richness` item of the `specaccum` object, which is a list.
+
+```{r}
+sac$richness
+```
+
+Plot north and south SAC
+
+```{r}
+plot(sac_s, ci.type = "line", ci.col = "red")
+plot(sac_n, ci.type = "line", ci.col = "blue", add = TRUE)
+```
+
+## Rarefaction to compare diversity
+
+Rarefy the data to the smallest sample size.
+
+```{r}
+# Find the smallest number of plots
+rarefied_n <- min(nrow(montmaur_sp_n), nrow(montmaur_sp_s))
+# Estimate and estimator sd 
+# Rarified richness at n=17 quadra
+sac_n$richness[rarefied_n]
+sac_n$sd[rarefied_n]
+sac_s$richness[rarefied_n]
+sac_s$sd[rarefied_n]
+```
+
+Assuming normality of the rarefied richness, conclude wether the north or south face is more diverse.
+
+
+# Rank-abundance diagram
+
+Compute the probability for an area to be covered by each species.
+
+```{r}
+# Sum the species cover
+sp_cover <- colSums(montmaur_sp)
+# Normalise
+sp_cover <- sp_cover / sum(sp_cover)
+```
+
+Try to fit the distribution to a well-known one.
+
+```{r}
+radfit(sp_cover)
+plot(radfit(sp_cover))
+```
+
+# Taxonomic Diversity
+
+```{r}
+# Specific richness S
+sp_richness <- specnumber(montmaur_sp, MARGIN = 1)
+```
+
+
+```{r}
+# Species occurrences
+sp_occurrence <- specnumber(montmaur_sp, MARGIN = 2)
+plot(radfit(sp_occurrence))
+```
+## Shannon, Simpson, entropy
+
+
+## Diversity
+
+
+# Functional diversity
+
+
+# Beta diversity
+
+## Definitions
+
+## Differentiation
+
+## Partitioning
+
