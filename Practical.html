@@ -1706,9 +1706,8 @@ plot(radfit(sp_occurrence))</code></pre>
 </div>
 <div id="shannon-simpson-entropy" class="section level2">
 <h2>Shannon, Simpson, entropy</h2>
-<p>Richness, Shannon <span class="citation">(1948)</span> and Simpson
-<span class="citation">(1949)</span> indices measure entropy, i.e. a
-quantity of information.</p>
+<p>Richness minus one species, Shannon <span class="citation">(1948)</span> and Simpson <span class="citation">(1949)</span> indices measure entropy, i.e. a quantity
+of information.</p>
 <p>In a community:</p>
 <ul>
 <li>The <em>probability</em> <span class="math inline">\(p_s\)</span> of
@@ -1764,6 +1763,8 @@ traits &lt;- cbind(trait_chlorophyll, trait_type)
 traits &lt;- traits[traits$code_espece %in% colnames(montmaur_sp), -3]</code></pre>
 <div id="community-weighted-mean" class="section level2">
 <h2>Community weighted mean</h2>
+<p>Course: <span class="citation">Marcon (2018)</span>, section <a href="https://ericmarcon.github.io/MesuresBioDiv2/mesures-particuli%C3%A8res.html#diversit%C3%A9-et-moyenne">7.7</a>.</p>
+<p>Defined by <span class="citation">Garnier et al. (2004)</span>.</p>
 <pre class="r"><code>species_weights &lt;- colSums(montmaur_sp)[colnames(montmaur_sp) %in% traits$code_espece]
 mean(traits$chlorophylle, w = species_weights)</code></pre>
 <pre><code>## [1] 40.57018</code></pre>
@@ -1785,6 +1786,7 @@ aggregate(chlorophylle ~ type_biologique, data = traits, FUN = mean)</code></pre
 </div>
 <div id="functional-distance" class="section level2">
 <h2>Functional Distance</h2>
+<p>Course: <span class="citation">Marcon (2018)</span>, chapter <a href="https://ericmarcon.github.io/MesuresBioDiv2/chap-cadrephyfonc.html#chap-cadrephyfonc">6</a>.</p>
 <p>Functional distance between species following <span class="citation">Gower (1971)</span>.</p>
 <pre class="r"><code>library(&quot;FD&quot;)
 traits_distance &lt;- gowdis(traits)</code></pre>
@@ -1811,8 +1813,10 @@ montmaur_qe &lt;- QE(
 </div>
 <div id="beta-diversity" class="section level1">
 <h1>Beta diversity</h1>
+<p>Course: <span class="citation">Marcon (2018)</span>, chapter <a href="https://ericmarcon.github.io/MesuresBioDiv2/sec-betaCadre.html">10</a>.</p>
 <div id="partitioning" class="section level2">
 <h2>Partitioning</h2>
+<p>Course: <span class="citation">Marcon (2018)</span>, chapter <a href="https://ericmarcon.github.io/MesuresBioDiv2/chap-DedompHCDT.html#chap-DedompHCDT">12</a>.</p>
 <p>Défined by <span class="citation">Whittaker (1960)</span>.
 Multiplicative partitioning:</p>
 <pre class="r"><code># Total number of species
@@ -1827,6 +1831,7 @@ richness_beta &lt;- richness_gamma / richness_alpha</code></pre>
 </div>
 <div id="differentiation" class="section level2">
 <h2>Differentiation</h2>
+<p>Course: <span class="citation">Marcon (2018)</span>, chapter <a href="https://ericmarcon.github.io/MesuresBioDiv2/chap-BetaPaires.html#chap-BetaPaires">11</a>.</p>
 <p>How different are two plots?</p>
 <p>Jaccard dissimilarity is based on occurrence data.</p>
 <pre class="r"><code>library(&quot;vegan&quot;)
@@ -1846,6 +1851,12 @@ plot(density.reflected(bray, upper = 1))</code></pre>
 <div id="references" class="section level1 unnumbered">
 <h1 class="unnumbered">References</h1>
 <div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-Garnier2004" class="csl-entry">
+Garnier, Eric, Jacques Cortez, Georges Billès, Marie-Laure Navas,
+Catherine Roumet, Max Debussche, Gérard Laurent, et al. 2004.
+<span>“Plant Functional Markers Capture Ecosystem Properties During
+Secondary Succession.”</span> <em>Ecology</em> 85 (9): 2630–37. <a href="https://doi.org/10.1890/03-0799">https://doi.org/10.1890/03-0799</a>.
+</div>
 <div id="ref-Gower1971" class="csl-entry">
 Gower, J. C. 1971. <span>“A General Coefficient of Similarity and Some
 of Its Properties.”</span> <em>Biometrics</em> 27 (4): 857–71. <a href="https://doi.org/10.2307/2528823">https://doi.org/10.2307/2528823</a>.
