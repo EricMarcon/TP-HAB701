@@ -2,7 +2,7 @@
 title: "TP Ecologie Biodiversité Montmaur"
 author: "Eric Marcon d'après Bastien Mérigot et Guillaume Papuga"
 date: "`r Sys.Date()`"
-bibliography: references.bib
+bibliography: [references.bib, packages.bib]
 output: 
   html_document:
     toc: true
@@ -22,15 +22,17 @@ InstallPackages <- function(Packages) {
 # Basic packages
 InstallPackages(c("bookdown", "formatR", "tidyverse"))
 # Specific packages
-InstallPackages(
-  c(
-    "ade4", 
-    "adiv",
-    "entropart",
-    "FD",
-    "vegan"
-  )
+packages <- c(
+  "ade4", 
+  "adiv",
+  "entropart",
+  "FD",
+  "GoFKernel",
+  "vegan"
 )
+InstallPackages(packages)
+# Create packages.bib file to reference them as @R-package
+knitr::write_bib(packages, file = "packages.bib")
 # knitr options
 knitr::opts_chunk$set(echo = TRUE, cache = FALSE, message = FALSE, warning = FALSE)
 # Load the tidyverse
@@ -151,6 +153,10 @@ montmaur %>%
 
 ## Assess diversity at a sampling level
 
+Course: @Marcon2014d, sections [2.1](https://ericmarcon.github.io/MesuresBioDiv2/chap-Outils.html#courbes-daccumulation) and 2.2.
+
+Accumulation curves can be built by package **vegan** [@R-vegan].
+
 ```{r}
 library("vegan")
 sac <- specaccum(montmaur_sp)
@@ -174,6 +180,8 @@ plot(sac_n, ci.type = "line", ci.col = "blue", add = TRUE)
 
 ## Rarefaction to compare diversity
 
+Course: @Marcon2014d, chapter [21](https://ericmarcon.github.io/MesuresBioDiv2/chap-Accumulation.html#chap-Accumulation).
+
 Rarefy the data to the smallest sample size.
 
 ```{r}
@@ -187,10 +195,12 @@ sac_s$richness[rarefied_n]
 sac_s$sd[rarefied_n]
 ```
 
-Assuming normality of the rarefied richness, conclude wether the north or south face is more diverse.
+Assuming normality of the rarefied richness, conclude whether the north or south face is more diverse.
 
 
 # Rank-abundance diagram
+
+Course: @Marcon2014d, section [2.4](https://ericmarcon.github.io/MesuresBioDiv2/chap-Outils.html#distribution-de-labondance-des-esp%C3%A8ces-sad).
 
 Compute the probability for an area to be covered by each species.
 
@@ -210,6 +220,10 @@ plot(radfit(sp_cover))
 
 # Taxonomic Diversity
 
+Course: @Marcon2014d, chapters [3](https://ericmarcon.github.io/MesuresBioDiv2/chap-MesuresNeutres.html) and [4](https://ericmarcon.github.io/MesuresBioDiv2/entropie.html).
+
+## Richness
+
 ```{r}
 # Specific richness S
 sp_richness <- specnumber(montmaur_sp, MARGIN = 1)
@@ -221,10 +235,45 @@ sp_richness <- specnumber(montmaur_sp, MARGIN = 1)
 sp_occurrence <- specnumber(montmaur_sp, MARGIN = 2)
 plot(radfit(sp_occurrence))
 ```
+
 ## Shannon, Simpson, entropy
+
+Richness, Shannon [-@Shannon1948] and Simpson [-@Simpson1949] indices measure entropy, i.e. a quantity of information.
+
+In a community:
+
+- The _probability_ $p_s$ of a species is the probability for an individual to belong to it.
+When individuals are not well-defined, another definition must be chosen: with abundance-dominance data, it is the proportion of total coverage occupied by the species.
+- The _rarity_ of a species is the reciprocal of its probability, i.e. $1/p_s$.
+- The information brought by the species is:
+    - $(1-p_s)/p_s$ for richness (full line) 
+    - the logarithm of rarity for Shannon ($\ln(1/p_s)$) (long dashes), 
+    - $1-p_s$ for Simpson (sort dashes).
+
+```{r ICode, eval=FALSE}
+I0 <- function(p) (1 - p) / p
+I1 <- function(p) -log(p)
+I2 <- function(p) 1 - p
+ggplot(data.frame(x=c(0, 1)), aes(x)) + 
+    stat_function(fun = I0) +
+    stat_function(fun = I1, lty = 2) +
+    stat_function(fun = I2, lty = 3) +
+    coord_cartesian(ylim = c(0, 10)) +
+    labs(x = "p", y = "I(p)")
+```
+
+- The entropy of the community is the average information brought by its species.
+
+The information function gives more (richness) or less (Simpson) weight to rare species.
+
+
+
 
 
 ## Diversity
+
+Diversity sensu stricto is the number of equiprobable species that would yield the same entropy as the data.
+It is called a Hill [-@Hill1973] number or a number equivalent or the effective number of species [@Jost2006].
 
 
 # Functional diversity
@@ -271,6 +320,8 @@ plot(species_fhc, hang = -1)
 ```
 
 ## Quadratic entropy
+
+Course: @Marcon2014d, section [7.6](https://ericmarcon.github.io/MesuresBioDiv2/mesures-particuli%C3%A8res.html#sec-Rao).
 
 Rao's entropy (aka quadratic entropy) is the average distance between two individuals.
 
