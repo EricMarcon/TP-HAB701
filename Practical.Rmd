@@ -238,7 +238,7 @@ plot(radfit(sp_occurrence))
 
 ## Shannon, Simpson, entropy
 
-Richness, Shannon [-@Shannon1948] and Simpson [-@Simpson1949] indices measure entropy, i.e. a quantity of information.
+Richness minus one species, Shannon [-@Shannon1948] and Simpson [-@Simpson1949] indices measure entropy, i.e. a quantity of information.
 
 In a community:
 
@@ -292,6 +292,10 @@ traits <- traits[traits$code_espece %in% colnames(montmaur_sp), -3]
 
 ## Community weighted mean
 
+Course: @Marcon2014d, section [7.7](https://ericmarcon.github.io/MesuresBioDiv2/mesures-particuli%C3%A8res.html#diversit%C3%A9-et-moyenne).
+
+Defined by @Garnier2004.
+
 ```{r}
 species_weights <- colSums(montmaur_sp)[colnames(montmaur_sp) %in% traits$code_espece]
 mean(traits$chlorophylle, w = species_weights)
@@ -302,6 +306,8 @@ aggregate(chlorophylle ~ type_biologique, data = traits, FUN = mean)
 For intensive use, see `BAT::cwm()`.
 
 ## Functional Distance
+
+Course: @Marcon2014d, chapter [6](https://ericmarcon.github.io/MesuresBioDiv2/chap-cadrephyfonc.html#chap-cadrephyfonc).
 
 Functional distance between species following @Gower1971.
 
@@ -335,7 +341,12 @@ montmaur_qe <- QE(
 
 # Beta diversity
 
+Course: @Marcon2014d, chapter [10](https://ericmarcon.github.io/MesuresBioDiv2/sec-betaCadre.html).
+
 ## Partitioning
+
+Course: @Marcon2014d, chapter [12](https://ericmarcon.github.io/MesuresBioDiv2/chap-DedompHCDT.html#chap-DedompHCDT).
+
 
 Défined by @Whittaker1960. 
 Multiplicative partitioning: 
@@ -356,6 +367,8 @@ richness_gamma - richness_alpha
 ```
 
 ## Differentiation
+
+Course: @Marcon2014d, chapter [11](https://ericmarcon.github.io/MesuresBioDiv2/chap-BetaPaires.html#chap-BetaPaires).
 
 How different are two plots?
 
