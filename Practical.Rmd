@@ -325,7 +325,7 @@ Course: @Marcon2014d, section [7.6](https://ericmarcon.github.io/MesuresBioDiv2/
 
 Rao's entropy (aka quadratic entropy) is the average distance between two individuals.
 
-```{r}
+```{r, eval=FALSE}
 library("adiv")
 montmaur_qe <- QE(
   comm = montmaur_sp[, traits$code_espece], 
