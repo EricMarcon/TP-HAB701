@@ -25,6 +25,9 @@ InstallPackages(c("bookdown", "formatR", "tidyverse"))
 InstallPackages(
   c(
     "ade4", 
+    "adiv",
+    "entropart",
+    "FD",
     "vegan"
   )
 )
@@ -56,7 +59,7 @@ Editing the data interactively is a bad practice because it is not reproducible.
 Do rather edit the original file.
 
 Explore the data:
-```{r}
+```{r, eval=FALSE}
 head(montmaur)
 str(montmaur)
 summary(montmaur)
@@ -68,6 +71,7 @@ Map the plots:
 # Force the aspect ratio
 plot(x = montmaur$longitude, y = montmaur$longitude, asp = 1)
 ```
+
 Avoid repeating `montmaur$`:
 
 - With `attach()`: bad practice.
@@ -225,12 +229,101 @@ plot(radfit(sp_occurrence))
 
 # Functional diversity
 
+```{r}
+traits <- read.csv2("data/traits.csv")
+# chlorophyll
+trait_chlorophyll <- aggregate(chlorophylle ~ code_espece, data = traits, FUN = mean)
+# Biological type
+trait_type <- aggregate(type_biologique ~ code_espece, data = traits, FUN = unique)
+# Trait table
+traits <- cbind(trait_chlorophyll, trait_type)
+# Delete doubled column and keep observed species only
+traits <- traits[traits$code_espece %in% colnames(montmaur_sp), -3]
+```
+
+## Community weighted mean
+
+```{r}
+species_weights <- colSums(montmaur_sp)[colnames(montmaur_sp) %in% traits$code_espece]
+mean(traits$chlorophylle, w = species_weights)
+# By type (unweighted)
+aggregate(chlorophylle ~ type_biologique, data = traits, FUN = mean)
+```
+
+For intensive use, see `BAT::cwm()`.
+
+## Functional Distance
+
+Functional distance between species following @Gower1971.
+
+```{r}
+library("FD")
+traits_distance <- gowdis(traits)
+```
+
+## Hierarchical classification
+
+Functional classification of species (complementarity-redundancy) with CAH (mean linkage) based on Gower distances:
+
+```{r}
+species_fhc <- hclust(traits_distance, method = "average")
+plot(species_fhc, hang = -1)
+```
+
+## Quadratic entropy
+
+Rao's entropy (aka quadratic entropy) is the average distance between two individuals.
+
+```{r}
+library("adiv")
+montmaur_qe <- QE(
+  comm = montmaur_sp[, traits$code_espece], 
+  dis = traits_distance
+)
+```
 
 # Beta diversity
 
-## Definitions
+## Partitioning
+
+Défined by @Whittaker1960. 
+Multiplicative partitioning: 
+
+```{r}
+# Total number of species
+richness_gamma <- sum(colSums(montmaur_sp) > 0)
+# Average number of species per plot
+richness_plot <- apply(montmaur_sp, MARGIN = 1, FUN = function(plot) sum(plot > 0))
+richness_alpha <- mean(richness_plot)
+richness_beta <- richness_gamma / richness_alpha
+```
+
+Additive partitioning [@Lande1996]:
+
+```{r}
+richness_gamma - richness_alpha
+```
 
 ## Differentiation
 
-## Partitioning
+How different are two plots?
 
+Jaccard dissimilarity is based on occurrence data.
+
+```{r}
+library("vegan")
+jaccard <-vegdist(montmaur_sp, method = "jaccard")
+hist(jaccard)
+# Smooth the histogram, no values above 1
+library("GoFKernel")
+plot(density.reflected(jaccard, upper = 1))
+```
+
+Bray-Curtis dissimilarity is based on abundance data.
+
+```{r}
+bray <-vegdist(montmaur_sp, method = "bray")
+plot(density.reflected(bray, upper = 1))
+```
+
+# References
