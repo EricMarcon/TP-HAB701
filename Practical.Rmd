@@ -187,6 +187,7 @@ montmaur_occurrence <- specnumber(montmaur_sp, MARGIN = 2)
 radfit(montmaur_occurrence)
 plot(radfit(montmaur_occurrence))
 ```
+
 ## Compare abundance and occurence
 
 ```{r}
@@ -284,7 +285,7 @@ When individuals are not well-defined, another definition must be chosen: with a
     - the logarithm of rarity for Shannon ($\ln(1/p_s)$) (long dashes), 
     - $1-p_s$ for Simpson (sort dashes).
 
-```{r ICode, eval=FALSE}
+```{r ICode}
 I0 <- function(p) (1 - p) / p
 I1 <- function(p) -log(p)
 I2 <- function(p) 1 - p
@@ -350,7 +351,7 @@ Diversity(montmaur_cover, q = 2)
 1 / (1 - Simpson(montmaur_cover))
 ```
 
-In general, diversity of order $q$ is the deformed exponential of entropy of order $q^$.
+In general, diversity of order $q$ is the deformed exponential of entropy of order $q$.
 
 ```{r}
 # Simpson
