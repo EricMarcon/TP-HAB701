@@ -114,7 +114,7 @@ which(colSums(montmaur[, -(1:10)]) == 0)
 Create a dataframe with species abundances only, and eliminate absent species
 
 ```{r}
-montmaur_sp <- montmaur[, -(1:10)][, -which(colSums(montmaur[, -(1:10)]) == 0)]
+montmaur_sp <- montmaur[, -(1:10)][, which(colSums(montmaur[, -(1:10)]) > 0)]
 # Add the plot names
 rownames(montmaur_sp) <- montmaur$code_rel
 ```
@@ -260,6 +260,30 @@ sac_s$sd[rarefied_n]
 ```
 Compare the diversity of north and south face.
 
+
+## Extrapolation
+
+Extrapolation is possible, up to twice the sample size without too much uncertainty.
+See the **iNext** package [@Hsieh2014] for the [framework](https://cran.r-project.org/web/packages/iNEXT/vignettes/Introduction.pdf).
+
+
+```{r}
+library("entropart")
+Richness(montmaur_occurrence, Level = 2 * sum(montmaur_occurrence))
+```
+Pot the accumulation curve:
+
+```{r}
+autoplot(
+  DivAC(
+    montmaur_occurrence,
+    q = 0, 
+    n.seq = 1:(2 * sum(montmaur_occurrence))
+  )
+)
+```
+
+
 ## Asymptotic richness
 
 Course: @Marcon2014d, sections [2.2](https://ericmarcon.github.io/MesuresBioDiv2/chap-Outils.html#diversit%C3%A9-asymptotique) and [3.1](https://ericmarcon.github.io/MesuresBioDiv2/chap-MesuresNeutres.html#sec-Richesse)
@@ -267,7 +291,6 @@ Course: @Marcon2014d, sections [2.2](https://ericmarcon.github.io/MesuresBioDiv2
 Requires estimators based on the number of individuals or on the number of occurrences, available in package **entropart** [@R-entropart].
 
 ```{r}
-library("entropart")
 Richness(montmaur_occurrence, Correction = "Chao1")
 ```
 
