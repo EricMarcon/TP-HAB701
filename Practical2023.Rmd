@@ -1,0 +1,612 @@
+---
+title: "TP Ecologie Biodiversité Montmaur"
+author: "Eric Marcon d'après Bastien Mérigot et Guillaume Papuga"
+date: "`r Sys.Date()`"
+bibliography: [references.bib, packages.bib]
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+# Installation of packages if necessary
+InstallPackages <- function(Packages) {
+  InstallPackage <- function(Package) {
+    if (!Package %in% installed.packages()[, 1]) {
+      install.packages(Package, repos="https://cran.rstudio.com/")
+    }
+  }
+  invisible(sapply(Packages, InstallPackage))
+}
+# Basic packages
+InstallPackages(c("bookdown", "formatR", "tidyverse"))
+# Specific packages
+packages <- c(
+  "ade4", 
+  "adiv",
+  "entropart",
+  "FD",
+  "GoFKernel",
+  "plyr",
+  "vegan"
+)
+InstallPackages(packages)
+# Create packages.bib file to reference them as @R-package
+knitr::write_bib(packages, file = "packages.bib")
+# knitr options
+knitr::opts_chunk$set(echo = TRUE, cache = FALSE, message = FALSE, warning = FALSE)
+# Load the tidyverse
+library("tidyverse")
+```
+
+# Data
+
+The classical shape of biodiversity data is a matrix where columns are species and rows are plots.
+Values are abundances.
+
+## Base R version 
+
+### Read files
+
+Load the data:
+
+```{r}
+zones <- read.csv2("data/zones2023.csv")
+species <- read.csv2("data/especes2023.csv")
+```
+
+Interactive version:
+
+```{r, eval=FALSE}
+zones <- read.table(file.choose(), sep=";", dec=",", header=T)
+# Edit the data
+zones <- edit(zones) 
+```
+
+Editing the data interactively is a bad practice because it is not reproducible.
+Do rather edit the original file.
+
+### Explore
+
+Explore the data:
+```{r, eval=FALSE}
+head(species)
+str(species)
+summary(species)
+```
+
+Map the plots:
+
+```{r}
+# Force the aspect ratio
+plot(x = zones$longitude, y = zones$longitude, asp = 1)
+```
+
+Avoid repeating `montmaur$`:
+
+- With `attach()`: bad practice.
+See `?attach`.
+```{r}
+attach(zones)
+plot(x = longitude, y = longitude, asp = 1)
+# Don't forget to detach after use!
+detach(zones)
+```
+
+- With `with()`.
+```{r}
+with(zones,
+  # Indent the code
+  plot(x = longitude, y = longitude, asp = 1)
+  # Close the bracket
+)
+```
+## Tidyverse
+
+### Build the community table
+
+Complex data manipulation (data wrangling) is easier within the tidyverse.
+
+Read the data.
+
+```{r}
+library("tidyverse")
+zones <- read_csv2("data/zones2023.csv")
+species <- read_csv2("data/especes2023.csv")
+```
+
+Make a pivot table.
+
+```{r}
+species %>% 
+  mutate(
+    cover_str = plyr::mapvalues(
+      recouvrement,
+      from = c("0", "i", "r", "+", "1", "2", "3", "4", "5"),
+      to = c(0, .001, .005, .01, .025, .15, .375, .625, .875)
+    )
+  ) %>% 
+  mutate(cover = as.numeric(cover_str)) %>% 
+  mutate(species = c(paste(genre, espece, sep = "_"))) %>% 
+  select(-genre, -espece, -recouvrement, -cover_str) %>% 
+  pivot_wider(
+    names_from = species, 
+    values_from = cover, 
+    values_fill = 0
+  ) ->
+  species_wide
+zones %>% 
+  full_join(species_wide) ->
+  montmaur
+```
+
+
+Make a pipeline to select rows and columns:
+
+```{r}
+montmaur %>%
+  # Filter the north face
+  filter(versant == "N") %>% 
+  # Select species columns
+  select(!(Groupe:rec_espece_dominante_arboree)) %>% 
+  # Eliminate absent species
+  select(where(~sum(.) != 0))
+```
+
+Are some plots empty?
+
+```{r}
+# The first 10 columns contain plot data, the others, the species abundances
+min(rowSums(montmaur[, -(1:10)]))
+```
+Are some species missing?
+
+```{r}
+# The first 10 columns contain plot data, the others, the species abundances
+which(colSums(montmaur[, -(1:10)]) == 0)
+# Numbers are those of the columns. They are named.
+```
+Create a dataframe with species abundances only, and eliminate absent species
+
+```{r}
+montmaur_sp <- montmaur[, -(1:10)][, which(colSums(montmaur[, -(1:10)]) > 0)]
+# Add the plot names
+rownames(montmaur_sp) <- montmaur$code_rel
+```
+
+Make dataframes for the north and south face only:
+```{r}
+montmaur_sp_n <- montmaur_sp[montmaur$versant == "N", ]
+montmaur_sp_s <- montmaur_sp[montmaur$versant == "S", ]
+```
+
+Graphical representation of the data table:
+
+```{r, eval=FALSE}
+library("ade4")
+table.value(montmaur_sp_n, clegend=0) 
+```
+
+
+# Rank-abundance diagram
+
+Course: @Marcon2014d, section [2.4](https://ericmarcon.github.io/MesuresBioDiv2/chap-Outils.html#distribution-de-labondance-des-esp%C3%A8ces-sad).
+
+## Abundances: species cover
+
+Compute the probability for an area to be covered by each species.
+
+```{r}
+# Sum the species cover
+montmaur_cover <- colSums(montmaur_sp)
+# Normalise
+montmaur_cover <- montmaur_cover / sum(montmaur_cover)
+```
+
+Try to fit the distribution to a well-known one.
+
+```{r}
+library("vegan")
+radfit(montmaur_cover)
+plot(radfit(montmaur_cover))
+```
+
+## Occurrence
+
+Count the number of plots where each species is observed.
+
+```{r}
+# Species occurrences
+montmaur_occurrence <- specnumber(montmaur_sp, MARGIN = 2)
+radfit(montmaur_occurrence)
+plot(radfit(montmaur_occurrence))
+```
+
+## Compare abundance and occurence
+
+```{r}
+plot(x = montmaur_cover, y = montmaur_occurrence)
+```
+
+
+
+# Taxonomic Diversity
+
+Course: @Marcon2014d, chapters [3](https://ericmarcon.github.io/MesuresBioDiv2/chap-MesuresNeutres.html) and [4](https://ericmarcon.github.io/MesuresBioDiv2/entropie.html).
+
+## Richness
+
+Count the number of species per plot.
+
+```{r}
+# Specific richness S
+(plot_richness <- specnumber(montmaur_sp, MARGIN = 1))
+```
+
+## Accumulation curves
+
+The level of diversity depends on the sampling effort.
+
+### Assess diversity at a sampling level
+
+Course: @Marcon2014d, sections [2.1](https://ericmarcon.github.io/MesuresBioDiv2/chap-Outils.html#courbes-daccumulation) and 2.2.
+
+Accumulation curves can be built by package **vegan** [@R-vegan].
+
+```{r}
+library("vegan")
+sac <- specaccum(montmaur_sp)
+plot(sac)
+sac_n <- specaccum(montmaur_sp_n) 
+sac_s <- specaccum(montmaur_sp_s)
+```
+
+The number of species is in the `$richness` item of the `specaccum` object, which is a list.
+
+```{r}
+sac$richness
+# Total richness is also
+sum(colSums(montmaur_sp) != 0)
+```
+
+Plot north and south SAC:
+
+```{r, eval=FALSE}
+plot(sac_s, ci.type = "line", ci.col = "red")
+plot(sac_n, ci.type = "line", ci.col = "blue", add = TRUE)
+```
+
+### Rarefaction to compare diversity
+
+Course: @Marcon2014d, chapter [21](https://ericmarcon.github.io/MesuresBioDiv2/chap-Accumulation.html#chap-Accumulation).
+
+Rarefy the data to the smallest sample size.
+
+```{r}
+# Find the smallest number of plots
+rarefied_n <- min(nrow(montmaur_sp_n), nrow(montmaur_sp_s))
+# Estimate and estimator sd 
+# Ratified richness at n=rarefied_n plots
+sac_n$richness[rarefied_n]
+sac_n$sd[rarefied_n]
+sac_s$richness[rarefied_n]
+sac_s$sd[rarefied_n]
+```
+Compare the diversity of north and south face.
+
+
+## Extrapolation
+
+Extrapolation is possible, up to twice the sample size without too much uncertainty.
+See the **iNext** package [@Hsieh2014] for the [framework](https://cran.r-project.org/web/packages/iNEXT/vignettes/Introduction.pdf).
+
+
+```{r}
+library("entropart")
+Richness(montmaur_occurrence, Level = 2 * sum(montmaur_occurrence))
+```
+Pot the accumulation curve:
+
+```{r}
+autoplot(
+  DivAC(
+    montmaur_occurrence,
+    q = 0, 
+    n.seq = 1:(2 * sum(montmaur_occurrence))
+  )
+)
+```
+
+
+## Asymptotic richness
+
+Course: @Marcon2014d, sections [2.2](https://ericmarcon.github.io/MesuresBioDiv2/chap-Outils.html#diversit%C3%A9-asymptotique) and [3.1](https://ericmarcon.github.io/MesuresBioDiv2/chap-MesuresNeutres.html#sec-Richesse)
+
+Requires estimators based on the number of individuals or on the number of occurrences, available in package **entropart** [@R-entropart].
+
+```{r}
+Richness(montmaur_occurrence, Correction = "Chao1")
+```
+
+## Shannon, Simpson, entropy
+
+Richness minus one species, Shannon [-@Shannon1948] and Simpson [-@Simpson1949] indices measure entropy, i.e. an amount of information.
+
+In a community:
+
+- The _probability_ $p_s$ of a species is the probability for an individual to belong to it.
+When individuals are not well-defined, another definition must be chosen: with abundance-dominance data, it is the proportion of total coverage occupied by the species.
+- The _rarity_ of a species is the reciprocal of its probability, i.e. $1/p_s$.
+- The information brought by the species is:
+    - $(1-p_s)/p_s$ for richness (full line) 
+    - the logarithm of rarity for Shannon ($\ln(1/p_s)$) (long dashes), 
+    - $1-p_s$ for Simpson (sort dashes).
+
+```{r ICode}
+I0 <- function(p) (1 - p) / p
+I1 <- function(p) -log(p)
+I2 <- function(p) 1 - p
+ggplot(data.frame(x=c(0, 1)), aes(x)) + 
+    stat_function(fun = I0) +
+    stat_function(fun = I1, lty = 2) +
+    stat_function(fun = I2, lty = 3) +
+    coord_cartesian(ylim = c(0, 10)) +
+    labs(x = "p", y = "I(p)")
+```
+
+- The entropy of the community is the average information brought by its species.
+
+The information function gives more (richness) or less (Simpson) weight to rare species.
+
+```{r}
+# Shannon
+Shannon(montmaur_occurrence, Correction = "None")
+# Asymptotic
+Shannon(montmaur_occurrence)
+# Cover data
+Shannon(montmaur_cover)
+```
+
+Simpson's entropy is the probability for two individuals to belong to different species.
+
+```{r}
+# Simpson
+Simpson(montmaur_occurrence, Correction = "None")
+# Asymptotic
+Simpson(montmaur_occurrence)
+# Cover data
+Simpson(montmaur_cover)
+```
+The generalized entropy extends this approach.
+The deformed logarithm function of order $q$ is $\ln_q(x) = \frac{x^{1-q} - 1}{1 - q}$.
+
+- the natural logarithm for $q=1$ : $\ln_1(x) = \ln(x)$.
+- a more concave function for $q > 1$ : $\ln_2(x) = 1 - 1/x$.
+- a less concave function for $q < 1$ : $\ln_0(x) = x - 1$.
+
+Then:
+
+- entropy of order q is the average deformed logarithm (of order q) of rarity: $^{q}H = \sum_s {\ln_q(1/p_s)}$.
+- entropy of order 0 is richness minus 1.
+- entropy of order 1 is Shannon's entropy.
+- entropy of order 2 is Simson's entropy.
+- the greater $q$, the less importance is given to rare species.
+
+## Diversity
+
+Diversity sensu stricto is the number of equiprobable species that would yield the same entropy as the data.
+It is called a Hill [-@Hill1973] number or a number equivalent or the effective number of species [@Jost2006].
+
+It is the exponential of Shannon's entropy and the reciprocal of Simpson's similarity.
+
+```{r}
+# Shannon
+Diversity(montmaur_cover, q = 1)
+exp(Shannon(montmaur_cover))
+# Simpson
+Diversity(montmaur_cover, q = 2)
+1 / (1 - Simpson(montmaur_cover))
+```
+
+In general, diversity of order $q$ is the deformed exponential of entropy of order $q$.
+
+```{r}
+# Simpson
+expq(Simpson(montmaur_cover), q = 2)
+# From diversity to entropy
+lnq(Diversity(montmaur_cover, q = 2), q = 2)
+```
+
+## Diversity profile
+
+Plot diversity with respect to its order.
+
+```{r}
+autoplot(CommunityProfile(Diversity, montmaur_cover))
+```
+
+
+# Functional diversity
+
+```{r}
+# Read the data
+"data/traits2023.csv" %>% 
+  read_csv2() %>% 
+  mutate(code_espece = paste(genre, espece, sep = "_")) ->
+  traits
+# chlorophyll
+trait_chlorophyll <- aggregate(chlorophylle ~ code_espece, data = traits, FUN = mean)
+# Biological type
+trait_type <- aggregate(type_biologique ~ code_espece, data = traits, FUN = unique)
+# Trait table
+traits <- cbind(trait_chlorophyll, trait_type)
+# Delete doubled column and keep observed species only
+traits <- traits[traits$code_espece %in% colnames(montmaur_sp), -3]
+head(traits)
+```
+
+## Community weighted mean
+
+Course: @Marcon2014d, section [7.7](https://ericmarcon.github.io/MesuresBioDiv2/mesures-particuli%C3%A8res.html#diversit%C3%A9-et-moyenne).
+
+Defined by @Garnier2004.
+CWM is a mean, not a diversity.
+
+```{r}
+species_weights <- colSums(montmaur_sp)[colnames(montmaur_sp) %in% traits$code_espece]
+mean(traits$chlorophylle, w = species_weights)
+# By type (unweighted)
+aggregate(chlorophylle ~ type_biologique, data = traits, FUN = mean)
+```
+
+For intensive use, see `BAT::cwm()`.
+
+## Functional Distance
+
+Course: @Marcon2014d, chapter [6](https://ericmarcon.github.io/MesuresBioDiv2/chap-cadrephyfonc.html#chap-cadrephyfonc).
+
+Functional distance between species following @Gower1971.
+
+```{r}
+library("FD")
+# Distances based on traits, not including species names.
+traits_distance <- gowdis(traits[, -1])
+plot(density(traits_distance))
+```
+
+## Quadratic entropy
+
+Course: @Marcon2014d, section [7.6](https://ericmarcon.github.io/MesuresBioDiv2/mesures-particuli%C3%A8res.html#sec-Rao).
+
+Rao's entropy (aka quadratic entropy) is the average distance between two individuals.
+
+```{r, eval=FALSE}
+library("adiv")
+montmaur_qe <- QE(
+  comm = montmaur_sp[, traits$code_espece], 
+  dis = traits_distance
+)
+```
+
+
+## Hierarchical classification
+
+Functional classification of species (complementarity-redundancy) with CAH (mean linkage) based on Gower distances:
+
+```{r}
+# Restore the species names
+attr(traits_distance, "Labels") <- traits$code_espece
+species_fhc <- hclust(traits_distance, method = "average")
+plot(species_fhc, hang = -1)
+```
+
+
+# Phylogenetic diversity
+
+Course: @Marcon2014d, chapter [8](https://ericmarcon.github.io/MesuresBioDiv2/chap-Phyloentropie.html#chap-Phyloentropie).
+
+Defined to assess the dissimilarities between species summarized in a dendrogram.
+We'll use the functional dendrogram above as an exercice, even though it is not a good approach to measure functional diversity.
+
+The dendrogram is cut into slices at each node height.
+Entropy is calculated in each slice and averaged along the tree: it is the average information along time (if the dendrogram represents evolutionary times) and diversity is its exponential.
+
+PD [@Faith1992], aka FD [@Petchey2006] is the total length of branches, i.e. richness.
+
+```{r}
+# Subset the data: keep species of the tree only
+montmaur_reduced <- montmaur_occurrence[
+  names(montmaur_occurrence) %in% species_fhc$labels
+]
+# FD
+PDFD(as.ProbaVector(montmaur_reduced), species_fhc)
+```
+Entropy of order 2 is the average distance between two individuals, i.e. Rao's entropy.
+
+```{r}
+# Asymptotic Rao's entropy in a normalized tree
+PhyloEntropy(montmaur_reduced, q = 2, Tree = species_fhc, Normalize = TRUE)
+```
+
+Diversity is its deformed exponential of order 2, i.e. 1/(1 - entropy).
+
+```{r}
+PhyloDiversity(montmaur_reduced, q = 2, Tree = species_fhc, Normalize = TRUE)$Total
+```
+
+# Beta diversity
+
+Course: @Marcon2014d, chapter [10](https://ericmarcon.github.io/MesuresBioDiv2/sec-betaCadre.html).
+
+## Partitioning
+
+Course: @Marcon2014d, chapter [12](https://ericmarcon.github.io/MesuresBioDiv2/chap-DedompHCDT.html#chap-DedompHCDT).
+
+
+Défined by @Whittaker1960. 
+Multiplicative partitioning: 
+
+```{r}
+# Total number of species
+richness_gamma <- sum(colSums(montmaur_sp) > 0)
+# Average number of species per plot
+richness_plot <- apply(montmaur_sp, MARGIN = 1, FUN = function(plot) sum(plot > 0))
+richness_alpha <- mean(richness_plot)
+richness_beta <- richness_gamma / richness_alpha
+```
+
+$\beta$ diversity is the effective number of plots, i.e. the number of equally-weighted plots that would yield the same diversity as the data.
+
+Additive partitioning [@Lande1996]:
+
+```{r}
+richness_gamma - richness_alpha
+```
+
+Additive partitioning is valid for entropy.
+
+
+## Differentiation
+
+Course: @Marcon2014d, chapter [11](https://ericmarcon.github.io/MesuresBioDiv2/chap-BetaPaires.html#chap-BetaPaires).
+
+How different are two plots?
+
+Jaccard dissimilarity is based on occurrence data.
+
+```{r}
+library("vegan")
+jaccard <-vegdist(montmaur_sp, method = "jaccard")
+hist(jaccard)
+# Smooth the histogram, no values above 1
+library("GoFKernel")
+plot(density.reflected(jaccard, upper = 1))
+```
+
+Bray-Curtis dissimilarity is based on abundance data.
+
+```{r}
+bray <-vegdist(montmaur_sp, method = "bray")
+plot(density.reflected(bray, upper = 1))
+```
+
+
+## Conciliation
+
+The figure of plots after a non-scaled, centred PCA shows the contribution of each plot to Simpson's $\beta$ entropy (partitioning).
+The distance between plots is Simpson's $\beta$ entropy between them (differentiation).
+
+```{r}
+montmaur_pca <- dudi.pca(
+  montmaur_sp/rowSums(montmaur_sp), 
+  scannf = FALSE, 
+  nf = 2,
+  center = TRUE,
+  scale = FALSE
+)
+scatter(montmaur_pca, clab.col = 0)
+```
+
+
+# References
