@@ -27,6 +27,7 @@ packages <- c(
   "adiv",
   "entropart",
   "FD",
+  "ggplot2",
   "GoFKernel",
   "vegan"
 )
@@ -152,6 +153,8 @@ montmaur %>%
   # Eliminate absent species
   select(where(~sum(.) != 0))
 ```
+
+Learn to make beautiful plots with **ggplot2** [@R-ggplot2] at the [R graph gallery](https://r-graph-gallery.com/).
 
 
 # Rank-abundance diagram

@@ -27,6 +27,7 @@ packages <- c(
   "adiv",
   "entropart",
   "FD",
+  "ggplot2",
   "GoFKernel",
   "plyr",
   "vegan"
@@ -187,6 +188,8 @@ Graphical representation of the data table:
 library("ade4")
 table.value(montmaur_sp_n, clegend=0) 
 ```
+
+Learn to make beautiful plots with **ggplot2** [@R-ggplot2] at the [R graph gallery](https://r-graph-gallery.com/).
 
 
 # Rank-abundance diagram
