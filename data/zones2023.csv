@@ -1,3 +1,4 @@
 ﻿Groupe;versant;zone;n_releve;code_releve;latitude;longitude;genre_arbre_dominante;espece_arbre_dominante;rec_espece_dominante_arboree
 Z;S;1;1;ZS1_1;43,6393943;3,8679412;Pinus;halepensis;75
-Z;N;1;1;ZN1_1;44;4;Quercus;Ilex;50
+Z;N;1;1;ZN1_1;44;4;Quercus;ilex;50
+Z;N;2;1;ZN1_2;44,1;3,8;Quercus;ilex;20
