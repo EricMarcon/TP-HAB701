@@ -1,4 +1,65 @@
-﻿Groupe;versant;zone;n_releve;code_releve;latitude;longitude;genre_arbre_dominante;espece_arbre_dominante;rec_espece_dominante_arboree
-Z;S;1;1;ZS1_1;43,6393943;3,8679412;Pinus;halepensis;75
-Z;N;1;1;ZN1_1;44;4;Quercus;ilex;50
-Z;N;2;1;ZN1_2;44,1;3,8;Quercus;ilex;20
+﻿Groupe;versant;zone;n_releve;code_releve;latitude;longitude;genre_arbre_dominant;espece_arbre_dominante;rec_espece_dominante_arboree;Invalide;Observations;Latitude_degres;Longitude_degres;D1;M1;S1;Latitude_calculee;D2;M2;S2;Latitude_calculee
+A;N;4;1;AN4_1;43,6396636;3,8700682;Plantago;subulata;3;;;;;;;;;;;;
+A;N;4;2;AN4_2;43,6397185;3,8702;Geranium;sp;3;;;;;;;;;;;;
+A;N;4;3;AN4_3;43,6398985;3,8703042;Brachypodium;retusum;3;;;;;;;;;;;;
+A;N;5;1;AN5_1;43,63305556;46,63305556;Pinus;halepensis;5;;;"43°37'59""";"3°52'9""";43;0,616666667;0,016388889;43,63305556;3;0,866666667;0,0025;46,63305556
+A;N;5;2;AN5_2;43,64027778;46,64027778;Pinus;halepensis;5;;;"43°38'25""";"3°52'11""";43;0,633333333;0,006944444;43,64027778;3;0,866666667;0,003055556;46,64027778
+A;N;5;3;AN5_3;43,64055556;46,64055556;Pinus ;halepensis;4;;;"43°38'26""";"3°52'12""";43;0,633333333;0,007222222;43,64055556;3;0,866666667;0,003333333;46,64055556
+A;N;6;1;AN6_1;43,64337;3,86853;Pinus;halepensis;5;;;;;;;;;;;;
+A;N;6;2;AN6_2;43,64316;3,86867;Pinus;pinaster;5;;;;;;;;;;;;
+A;N;6;3;AN6_3;43,64338;3,86879;Pinus;pinaster;5;;;;;;;;;;;;
+A;N;7;1;AN7_1;43,38579;3,5205;Quercus;ilex;;;;;;;;;;;;;
+A;N;7;2;AN7_2;43,38573;3,52037;Quercus;ilex;;;;;;;;;;;;;
+A;N;7;3;AN7_3;43,38565;3,52038;Quercus;ilex;;;;;;;;;;;;;
+A;N;8;1;AN8_1;43,6525;46,6525;Pinus;halepensis;5;;;"43°39'9""";"3°52'13""";43;0,65;0,0025;43,6525;3;0,866666667;0,003611111;46,6525
+A;N;8;2;AN8_2;43,6525;46,6525;Quercus;suber;5;;;"43°39'9""";"3°52'13""";43;0,65;0,0025;43,6525;3;0,866666667;0,003611111;46,6525
+A;N;8;3;AN8_3;43,6525;46,6525;Pinus;halepensis;4;;;"43°39'9""";"3°52'13""";43;0,65;0,0025;43,6525;3;0,866666667;0,003611111;46,6525
+A;N;11;1;AN11_1;43,64337;3,86929;Cupressus;sp;;;;;;;;;;;;;
+A;N;11;2;AN11_2;43,64342;3,86962;Arbustus;unedo;;;;;;;;;;;;;
+A;N;11;3;AN11_3;43,64349;3,8695;Pinus;sylvestris;;;;;;;;;;;;;
+A;S;1;1;AS1_1;43,63985;3,86783;Quercus;ilex;5;;;;;;;;;;;;
+A;S;1;2;AS1_2;43,63996;3,868;Pinus;halepensis;2;;;;;;;;;;;;
+A;S;1;3;AS1_3;43,63996;4,86759;Quercus;ilex;4;;;;;;;;;;;;
+A;S;12;1;AS12_1;43,38588;3,52139;Quercus;ilex;3;;;;;;;;;;;;
+A;S;12;2;AS12_2;43,38585;3,52144;Pinus;halepensis;4;;;;;;;;;;;;
+A;S;12;3;AS12_3;43,38583;3,52162;Pinus;halepensis;1;;;;;;;;;;;;
+A;S;99;1;AS99_1;43,6398;3,8683;Quercus;ilex;4;;;;;;;;;;;;
+A;S;99;2;AS99_2;43,6398;3,8687;Quercus;ilex;5;;;;;;;;;;;;
+A;S;99;3;AS99_3;43,64;3,8688;Quercus;ilex;3;;;;;;;;;;;;
+B;N;1;1;BN1_1;43,38375;3,5206;Quercus;ilex;3;;;;;;;;;;;;
+B;N;1;2;BN1_2;43,38375;3,52067;Quercus;ilex;3;;;;;;;;;;;;
+B;N;1;3;BN1_3;43,38375;3,52076;Quercus;ilex;3;;;;;;;;;;;;
+B;N;7;1;BN7_1;43,643611;3,8677;Pistacia;x saporta;2;;;;;;;;;;;;
+B;N;7;2;BN7_2;43,6436111;3,8677;Arbustus ;unedo;5;;;;;;;;;;;;
+B;N;7;3;BN7_3;43,6436111;3,8677;Quercus;ilex;3;;;;;;;;;;;;
+B;N;8;1;BN8_1;43,38359;3,52078;Quercus;ilex;;;;;;;;;;;;;
+B;N;8;2;BN8_2;43,38355;3,52084;Quercus;ilex;;;;;;;;;;;;;
+B;N;8;3;BN8_3;43,38342;3,52079;Pinus;halepensis;;;;;;;;;;;;;
+B;N;9;1;BN9_1;43,3835;3,5208;Pinus;halepensis;2;x;;;;;;;;;;;
+B;N;9;1;BN9_1;43,3835;3,5208;Quercus;ilex;3;;;;;;;;;;;;
+B;N;9;2;BN9_2;43,3835;3,5208;Pinus;halepensis;3;;;;;;;;;;;;
+B;N;9;2;BN9_2;43,3835;3,5208;Quercus ;ilex;3;x;;;;;;;;;;;
+B;N;9;3;BN9_3;43,3833;3,5209;Quercus ;ilex;5;;;;;;;;;;;;
+B;N;9;3;BN9_3;43,3833;3,5209;Cupressus;sp;2;x;;;;;;;;;;;
+B;N;10;1;BN10_1;43,3837;3,525;Quercus;ilex;5;;;;;;;;;;;;
+B;N;10;2;BN10_2;43,3837;3,525;Arbustus;unedo;3;;;;;;;;;;;;
+B;N;10;3;BN10_3;43,3837;3,526;Quercus ;ilex;1;;;;;;;;;;;;
+B;N;11;1;BN11_1;43,64325;3,86991;Pinus;halepensis;;;;;;;;;;;;;
+B;N;11;2;BN11_2;43,38596;3,52181;Pinus;halepensis;;;;;;;;;;;;;
+B;N;11;3;BN11_3;43,6433;3,86968;Pinus;halepensis;;;;;;;;;;;;;
+B;N;7bis;1;BN7bis_1;43,6433;3,868014;Pinus;halepensis;5;;;;;;;;;;;;
+B;N;7bis;2;BN7bis_2;43,6431446;3,86809909;Pinus;halepensis;5;;;;;;;;;;;;
+B;N;7bis;3;BN7bis_3;43,64312791;3,86828985;Cupressus;sempervirens;3;;;;;;;;;;;;
+B;S;4;1;BS4_1;43;3;Smilax;aspera ;2;;Coordonnées fausses;;;;;;;;;;
+B;S;4;2;BS4_2;43;3;Quercus;ilex;4;;Coordonnées fausses;;;;;;;;;;
+B;S;4;3;BS4_3;43;3;Quercus;ilex;3;;Coordonnées fausses;;;;;;;;;;
+B;S;6;1;BS6_1;43,38397;3,52218;Quercus ;coccifera;4;;;;;;;;;;;;
+B;S;6;2;BS6_2;43,38396;3,52226;Quercus ;coccifera;3;;;;;;;;;;;;
+B;S;6;3;BS6_3;43,38399;3,52238;Quercus ;suber;4;;;;;;;;;;;;
+B;S;7;1;BS7_1;43,643611;3,5226;Quercus;ilex;3;;;;;;;;;;;;
+B;S;7;2;BS7_2;43,38374;3,52256;Quercus ;ilex;4;;;;;;;;;;;;
+B;S;7;3;BS7_3;43,38386;3,52254;Quercus ;ilex;2;;;;;;;;;;;;
+B;S;10;1;BS10_1;43,38;3,5208;gen;sp;;;Arbre dominant non saisi;;;;;;;;;;
+B;S;10;2;BS10_2;43,38;3,5309;Pinus;halepensis;5;;;;;;;;;;;;
+B;S;10;3;BS10_3;43,38;3,5207;Cupressus;sempervirens;5;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;
