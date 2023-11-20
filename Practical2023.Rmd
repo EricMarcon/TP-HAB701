@@ -121,6 +121,9 @@ Make a pivot table.
 
 ```{r}
 species %>% 
+  # Delete missing covers
+  filter(!is.na(recouvrement)) %>% 
+  # Convert cover codes to numerical values
   mutate(
     cover_str = plyr::mapvalues(
       recouvrement,
@@ -128,17 +131,27 @@ species %>%
       to = c(0, .001, .005, .01, .025, .15, .375, .625, .875)
     )
   ) %>% 
+  # Make them really numerical
   mutate(cover = as.numeric(cover_str)) %>% 
+  # Gather genus and species
   mutate(species = c(paste(genre, espece, sep = "_"))) %>% 
-  select(-genre, -espece, -recouvrement, -cover_str) %>% 
+  # Delete useless columns
+  select(-genre, -espece, -recouvrement, -cover_str, -Observations) %>% 
+  # Pivot table
   pivot_wider(
     names_from = species, 
     values_from = cover, 
-    values_fill = 0
+    values_fn = ~ sum(.x, na.rm = TRUE),
+    values_fill = 0.0
   ) ->
   species_wide
 zones %>% 
-  full_join(species_wide) ->
+  # Eliminate invalid rows
+  filter(is.na(Invalide)) %>% 
+  # Eliminate extra columns
+  select(Groupe:rec_espece_dominante_arboree) %>% 
+  # Join plots and species (inner join)
+  inner_join(species_wide) ->
   montmaur
 ```
 
@@ -173,7 +186,7 @@ Create a dataframe with species abundances only, and eliminate absent species
 ```{r}
 montmaur_sp <- montmaur[, -(1:10)][, which(colSums(montmaur[, -(1:10)]) > 0)]
 # Add the plot names
-rownames(montmaur_sp) <- montmaur$code_rel
+rownames(montmaur_sp) <- montmaur$code_releve
 ```
 
 Make dataframes for the north and south face only:
@@ -276,8 +289,8 @@ sum(colSums(montmaur_sp) != 0)
 Plot north and south SAC:
 
 ```{r, eval=FALSE}
-plot(sac_s, ci.type = "line", ci.col = "red")
-plot(sac_n, ci.type = "line", ci.col = "blue", add = TRUE)
+plot(sac_n, ci.type = "line", ci.col = "blue")
+plot(sac_s, ci.type = "line", ci.col = "red", add = TRUE)
 ```
 
 ### Rarefaction to compare diversity
@@ -436,6 +449,10 @@ autoplot(CommunityProfile(Diversity, montmaur_cover))
 # Read the data
 "data/traits2023.csv" %>% 
   read_csv2() %>% 
+  # Eliminate missing data
+  filter(!is.na(type_biologique)) %>% 
+  filter(!is.na(chlorophylle)) %>% 
+  # Create the species name column
   mutate(code_espece = paste(genre, espece, sep = "_")) ->
   traits
 # chlorophyll
@@ -456,10 +473,10 @@ Course: @Marcon2014d, section [7.7](https://ericmarcon.github.io/MesuresBioDiv2/
 Defined by @Garnier2004.
 CWM is a mean, not a diversity.
 
-```{r}
+```{r, eval=FALSE}
 species_weights <- colSums(montmaur_sp)[colnames(montmaur_sp) %in% traits$code_espece]
 mean(traits$chlorophylle, w = species_weights)
-# By type (unweighted)
+# By type (unweighted). Does not work if type_biologique is not consistent
 aggregate(chlorophylle ~ type_biologique, data = traits, FUN = mean)
 ```
 
@@ -474,7 +491,10 @@ Functional distance between species following @Gower1971.
 ```{r}
 library("FD")
 # Distances based on traits, not including species names.
-traits_distance <- gowdis(traits[, -1])
+# type_biologique must be consistent (or it is a list)
+#   traits_distance <- gowdis(traits[, -1])
+# alternative: rely on species names and SPAD (poor choice)
+traits_distance <- gowdis(traits[, 1:2])
 plot(density(traits_distance))
 ```
 
