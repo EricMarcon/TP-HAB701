@@ -75,7 +75,7 @@ Map the plots:
 
 ```{r}
 # Force the aspect ratio
-plot(x = montmaur$longitude, y = montmaur$longitude, asp = 1)
+plot(x = montmaur$longitude, y = montmaur$latitude, asp = 1)
 ```
 
 Avoid repeating `montmaur$`:
@@ -84,7 +84,7 @@ Avoid repeating `montmaur$`:
 See `?attach`.
 ```{r}
 attach(montmaur)
-plot(x = longitude, y = longitude, asp = 1)
+plot(x = longitude, y = latitude, asp = 1)
 # Don't forget to detach after use!
 detach(montmaur)
 ```
@@ -93,7 +93,7 @@ detach(montmaur)
 ```{r}
 with(montmaur,
   # Indent the code
-  plot(x = longitude, y = longitude, asp = 1)
+  plot(x = longitude, y = latitude, asp = 1)
   # Close the bracket
 )
 ```
@@ -151,7 +151,7 @@ montmaur %>%
   # Select species columns
   select(!(Groupe:rec_tot)) %>% 
   # Eliminate absent species
-  select(where(~sum(.) != 0))
+  select(where(~ sum(.x) != 0))
 ```
 
 Learn to make beautiful plots with **ggplot2** [@R-ggplot2] at the [R graph gallery](https://r-graph-gallery.com/).

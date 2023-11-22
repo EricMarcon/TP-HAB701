@@ -81,7 +81,7 @@ Map the plots:
 
 ```{r}
 # Force the aspect ratio
-plot(x = zones$longitude, y = zones$longitude, asp = 1)
+plot(x = zones$longitude, y = zones$latitude, asp = 1)
 ```
 
 Avoid repeating `montmaur$`:
@@ -90,7 +90,7 @@ Avoid repeating `montmaur$`:
 See `?attach`.
 ```{r}
 attach(zones)
-plot(x = longitude, y = longitude, asp = 1)
+plot(x = longitude, y = latitude, asp = 1)
 # Don't forget to detach after use!
 detach(zones)
 ```
@@ -99,7 +99,7 @@ detach(zones)
 ```{r}
 with(zones,
   # Indent the code
-  plot(x = longitude, y = longitude, asp = 1)
+  plot(x = longitude, y = latitude, asp = 1)
   # Close the bracket
 )
 ```
@@ -134,7 +134,7 @@ species %>%
   # Make them really numerical
   mutate(cover = as.numeric(cover_str)) %>% 
   # Gather genus and species
-  mutate(species = c(paste(genre, espece, sep = "_"))) %>% 
+  mutate(species = paste(genre, espece, sep = "_")) %>% 
   # Delete useless columns
   select(-genre, -espece, -recouvrement, -cover_str, -Observations) %>% 
   # Pivot table
@@ -142,7 +142,7 @@ species %>%
     names_from = species, 
     values_from = cover, 
     values_fn = ~ sum(.x, na.rm = TRUE),
-    values_fill = 0.0
+    values_fill = 0
   ) ->
   species_wide
 zones %>% 
@@ -165,7 +165,7 @@ montmaur %>%
   # Select species columns
   select(!(Groupe:rec_espece_dominante_arboree)) %>% 
   # Eliminate absent species
-  select(where(~sum(.) != 0))
+  select(where(~ sum(.x) != 0))
 ```
 
 Are some plots empty?
@@ -199,7 +199,7 @@ Graphical representation of the data table:
 
 ```{r, eval=FALSE}
 library("ade4")
-table.value(montmaur_sp_n, clegend=0) 
+table.value(montmaur_sp_n, clegend = 0) 
 ```
 
 Learn to make beautiful plots with **ggplot2** [@R-ggplot2] at the [R graph gallery](https://r-graph-gallery.com/).
@@ -222,8 +222,9 @@ montmaur_cover <- montmaur_cover / sum(montmaur_cover)
 
 Try to fit the distribution to a well-known one.
 
-```{r}
+```{r, warning=FALSE}
 library("vegan")
+# Warnigs are due to non integer values.
 radfit(montmaur_cover)
 plot(radfit(montmaur_cover))
 ```
@@ -317,6 +318,7 @@ Compare the diversity of north and south face.
 Extrapolation is possible, up to twice the sample size without too much uncertainty.
 See the **iNext** package [@Hsieh2014] for the [framework](https://cran.r-project.org/web/packages/iNEXT/vignettes/Introduction.pdf).
 
+Extrapolation is easier with the **entropart** package.
 
 ```{r}
 library("entropart")
@@ -473,7 +475,7 @@ Course: @Marcon2014d, section [7.7](https://ericmarcon.github.io/MesuresBioDiv2/
 Defined by @Garnier2004.
 CWM is a mean, not a diversity.
 
-```{r, eval=FALSE}
+```{r}
 species_weights <- colSums(montmaur_sp)[colnames(montmaur_sp) %in% traits$code_espece]
 mean(traits$chlorophylle, w = species_weights)
 # By type (unweighted). Does not work if type_biologique is not consistent
@@ -492,9 +494,7 @@ Functional distance between species following @Gower1971.
 library("FD")
 # Distances based on traits, not including species names.
 # type_biologique must be consistent (or it is a list)
-#   traits_distance <- gowdis(traits[, -1])
-# alternative: rely on species names and SPAD (poor choice)
-traits_distance <- gowdis(traits[, 1:2])
+traits_distance <- gowdis(traits[, -1])
 plot(density(traits_distance))
 ```
 
@@ -547,14 +547,14 @@ PDFD(as.ProbaVector(montmaur_reduced), species_fhc)
 ```
 Entropy of order 2 is the average distance between two individuals, i.e. Rao's entropy.
 
-```{r}
+```{r, warning=FALSE}
 # Asymptotic Rao's entropy in a normalized tree
 PhyloEntropy(montmaur_reduced, q = 2, Tree = species_fhc, Normalize = TRUE)
 ```
 
 Diversity is its deformed exponential of order 2, i.e. 1/(1 - entropy).
 
-```{r}
+```{r, warning=FALSE}
 PhyloDiversity(montmaur_reduced, q = 2, Tree = species_fhc, Normalize = TRUE)$Total
 ```
 
