@@ -4,5 +4,5 @@
 
 Formats:
 
-- [HTML](https://ericmarcon.github.io/HAB701-TP/Practical.html): 2022 data.
-- [HTML](https://ericmarcon.github.io/HAB701-TP/Practical2023.html): 2023 data.
+- [HTML](https://ericmarcon.github.io/TP-HAB701/Practical.html): 2022 data.
+- [HTML](https://ericmarcon.github.io/TP-HAB701/Practical2023.html): 2023 data.
